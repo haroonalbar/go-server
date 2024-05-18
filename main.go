@@ -41,10 +41,15 @@ func main() {
 	//create a servemux
 	mux := http.NewServeMux()
 
-	//looks for index.html
+  //FileServer serves the whole file
+  //Dir is used to get the directory
 	fileServer := http.FileServer(http.Dir("./static"))
 
 	mux.Handle("/", fileServer)
+  // root is handled by fileServer it looks for index.html
+  // and any other files in the dir can be used 
+  // for eg: apipath/from.html will serve the form.html as the response
+
 	mux.HandleFunc("/form", formHandler)
 	mux.HandleFunc("/hello", helloHandler)
 
