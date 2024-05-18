@@ -32,17 +32,17 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	//create a servemux
-	// mux := http.NewServeMux()
+	mux := http.NewServeMux()
 
 	//looks for index.html
 	fileServer := http.FileServer(http.Dir("./static"))
 
-	http.Handle("/", fileServer)
-	http.HandleFunc("/form", formHandler)
-	http.HandleFunc("/hello", helloHandler)
+	mux.Handle("/", fileServer)
+	mux.HandleFunc("/form", formHandler)
+	mux.HandleFunc("/hello", helloHandler)
 
 	fmt.Println("Listening to server on port 8000")
-	if err := http.ListenAndServe(":8000", nil); err != nil {
+	if err := http.ListenAndServe(":8000", mux); err != nil {
 		log.Fatal(err)
 	}
 }
