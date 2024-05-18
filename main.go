@@ -1,25 +1,48 @@
 package main
 
 import (
-    "log"
-    "os"
+	"fmt"
+	"log"
+	"net/http"
 )
 
+func formHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "ParseForm() err: %v", err)
+		return
+	}
+	fmt.Fprintf(w, "POST request successfull")
+	name := r.FormValue("name")
+	address := r.FormValue("address")
+	fmt.Fprintf(w, "Name = %s\n", name)
+	fmt.Fprintf(w, "Address = %s\n", address)
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/hello" {
+		http.Error(w, "Not found bro 404", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Not supported method bro 404", http.StatusNotFound)
+		return
+	}
+	fmt.Fprintf(w, "Hello!\n")
+}
+
 func main() {
-    // Create a log file
-    file, err := os.OpenFile("example.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer file.Close()
+	//create a servemux
+	// mux := http.NewServeMux()
 
-    // Set the output of the logger to the file
-    log.SetOutput(file)
+	//looks for index.html
+	fileServer := http.FileServer(http.Dir("./static"))
 
-    // Set log prefix and flags
-    log.SetPrefix("LOG: ")
-    log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	http.Handle("/", fileServer)
+	http.HandleFunc("/form", formHandler)
+	http.HandleFunc("/hello", helloHandler)
 
-    // Log messages
-    log.Println("This is a test log message")
+	fmt.Println("Listening to server on port 8000")
+	if err := http.ListenAndServe(":8000", nil); err != nil {
+		log.Fatal(err)
+	}
 }
