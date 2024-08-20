@@ -7,14 +7,22 @@ import (
 )
 
 func formHandler(w http.ResponseWriter, r *http.Request) {
-  //parses the form
-	if err := r.ParseForm(); err != nil {
-		fmt.Fprintf(w, "ParseForm() err: %v", err)
+	if r.Method == http.MethodGet {
+		http.ServeFile(w, r, "static/form.html")
+		fmt.Fprint(w, "Broo")
+		return
+	} else if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	fmt.Fprintf(w, "POST request successfull\n")
+	// parse form
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "ParseForm Error: %v\n", err)
+	}
 
-  // reads the values from the request
+	w.Write([]byte("POST request successfull"))
+
+	// form values
 	name := r.FormValue("name")
 	address := r.FormValue("address")
 
@@ -23,38 +31,26 @@ func formHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-  //checks the path
 	if r.URL.Path != "/hello" {
-		http.Error(w, "Not found bro 404", http.StatusNotFound)
+		http.Error(w, "Not supperted method 404", http.StatusNotFound)
 		return
 	}
-
-  //checks the method
 	if r.Method != "GET" {
-		http.Error(w, "Not supported method bro 404", http.StatusNotFound)
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	fmt.Fprintf(w, "Hello!\n")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello!"))
 }
 
 func main() {
-	//create a servemux
-	mux := http.NewServeMux()
-
-  //FileServer serves the whole file
-  //Dir is used to get the directory
-	fileServer := http.FileServer(http.Dir("./static"))
-
-	mux.Handle("/", fileServer)
-  // root is handled by fileServer it looks for index.html
-  // and any other files in the dir can be used 
-  // for eg: apipath/from.html will serve the form.html as the response
-
-	mux.HandleFunc("/form", formHandler)
-	mux.HandleFunc("/hello", helloHandler)
-
-	fmt.Println("Listening to server on port 8000")
-	if err := http.ListenAndServe(":8000", mux); err != nil {
-		log.Fatal(err)
-	}
+	fs := http.FileServer(http.Dir("./static/"))
+	// this will serve the static directory by default
+	// and look for index.html
+	http.Handle("/", fs)
+	http.HandleFunc("/hello", helloHandler)
+	http.HandleFunc("/form", formHandler)
+	// formHandler)
+	fmt.Println("Sever on prot 8000")
+	log.Fatal(http.ListenAndServe(":8000", nil))
 }
