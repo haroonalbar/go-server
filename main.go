@@ -36,7 +36,8 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		// w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
